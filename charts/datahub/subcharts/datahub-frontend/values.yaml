@@ -42,8 +42,8 @@ service:
   targetPort: http
   protocol: TCP
   name: http
-  # Annotations to add to the service, this will help in adding 
-  # Internal load balancer or various other annotation support in AWS 
+  # Annotations to add to the service, this will help in adding
+  # Internal load balancer or various other annotation support in AWS
   annotations: {}
     # service.beta.kubernetes.io/aws-load-balancer-internal: "true"
 
@@ -92,6 +92,12 @@ extraVolumeMounts: []
   #   readOnly: true
 
 extraInitContainers: []
+
+lifecycle:
+  # To add a new user to datahub in JAAS config without mounting the user.props file
+  # postStart:
+  #   exec:
+  #     command: ["/bin/sh", "-c", "echo "test_user:password" >> datahub-frontend/conf/user.props"]
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -187,7 +193,7 @@ global:
     gms:
       port: "8080"
     appVersion: "1.0"
-    metadata_service_authentication: 
+    metadata_service_authentication:
       enabled: false
       systemClientId: "__datahub_system"
       # systemClientSecret:

@@ -67,6 +67,10 @@ spec:
               args:
                 - "-u"
                 - "RestoreIndices"
+                - "-a"
+                - "batchSize={{ .Values.datahubUpgrade.batchSize }}"
+                - "-a"
+                - "batchDelayMs={{ .Values.datahubUpgrade.batchDelayMs }}"
               env:
                 {{- include "datahub.upgrade.env" . | nindent 16}}
               {{- with .Values.datahubUpgrade.extraEnvs }}
@@ -83,12 +87,7 @@ spec:
                 {{- toYaml . | nindent 16 }}
               {{- end }}
               resources:
-                limits:
-                  cpu: 500m
-                  memory: 512Mi
-                requests:
-                  cpu: 300m
-                  memory: 256Mi
+                {{- toYaml .Values.datahubUpgrade.restoreIndices.resources | nindent 16}}
           {{- with .Values.datahubUpgrade.nodeSelector }}
           nodeSelector:
             {{- toYaml . | nindent 12 }}

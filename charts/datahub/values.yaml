@@ -92,6 +92,8 @@ datahubUpgrade:
   image:
     repository: acryldata/datahub-upgrade
     tag: "v0.8.43"
+  batchSize: 1000
+  batchDelayMs: 100
   noCodeDataMigration:
     sqlDbType: "MYSQL"
   podSecurityContext: {}
@@ -99,6 +101,14 @@ datahubUpgrade:
   securityContext: {}
     # runAsUser: 1000
   podAnnotations: {}
+  restoreIndices:
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 300m
+        memory: 256Mi
 
 global:
   graph_service_impl: neo4j

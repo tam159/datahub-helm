@@ -4,13 +4,13 @@ datahub-gms:
   enabled: true
   image:
     repository: linkedin/datahub-gms
-    tag: "v0.8.43"
+    tag: "v0.8.44"
 
 datahub-frontend:
   enabled: true
   image:
     repository: linkedin/datahub-frontend-react
-    tag: "v0.8.43"
+    tag: "v0.8.44"
   # Set up ingress to expose react front-end
   ingress:
     enabled: false
@@ -19,7 +19,7 @@ acryl-datahub-actions:
   enabled: true
   image:
     repository: acryldata/datahub-actions
-    tag: "v0.0.4"
+    tag: "v0.0.6"
   resources:
     limits:
       memory: 512Mi
@@ -30,24 +30,24 @@ acryl-datahub-actions:
 datahub-mae-consumer:
   image:
     repository: linkedin/datahub-mae-consumer
-    tag: "v0.8.43"
+    tag: "v0.8.44"
 
 datahub-mce-consumer:
   image:
     repository: linkedin/datahub-mce-consumer
-    tag: "v0.8.43"
+    tag: "v0.8.44"
 
 datahub-ingestion-cron:
   enabled: false
   image:
     repository: acryldata/datahub-ingestion
-    tag: "v0.8.43"
+    tag: "v0.8.44"
 
 elasticsearchSetupJob:
   enabled: true
   image:
     repository: linkedin/datahub-elasticsearch-setup
-    tag: "v0.8.43"
+    tag: "v0.8.44"
   podSecurityContext:
     fsGroup: 1000
   securityContext:
@@ -58,7 +58,7 @@ kafkaSetupJob:
   enabled: true
   image:
     repository: linkedin/datahub-kafka-setup
-    tag: "v0.8.43"
+    tag: "v0.8.44"
   podSecurityContext:
     fsGroup: 1000
   securityContext:
@@ -69,7 +69,7 @@ mysqlSetupJob:
   enabled: true
   image:
     repository: acryldata/datahub-mysql-setup
-    tag: "v0.8.43"
+    tag: "v0.8.44"
   podSecurityContext:
     fsGroup: 1000
   securityContext:
@@ -80,7 +80,7 @@ postgresqlSetupJob:
   enabled: false
   image:
     repository: acryldata/datahub-postgres-setup
-    tag: "v0.8.43"
+    tag: "v0.8.44"
   podSecurityContext:
     fsGroup: 1000
   securityContext:
@@ -91,11 +91,12 @@ datahubUpgrade:
   enabled: true
   image:
     repository: acryldata/datahub-upgrade
-    tag: "v0.8.43"
+    tag: "v0.8.44"
   batchSize: 1000
   batchDelayMs: 100
   noCodeDataMigration:
     sqlDbType: "MYSQL"
+    # sqlDbType: "POSTGRES"
   podSecurityContext: {}
     # fsGroup: 1000
   securityContext: {}
@@ -109,6 +110,27 @@ datahubUpgrade:
       requests:
         cpu: 300m
         memory: 256Mi
+
+prometheus-kafka-exporter:
+  enabled: false
+  kafkaServer:
+  - prerequisites-kafka:9092  # <<release-name>>-kafka:9092
+  # Sarama logging
+  sarama:
+    logEnabled: true
+  prometheus:
+    serviceMonitor:
+      enabled: true
+      namespace: monitoring
+      interval: "30s"
+      # If serviceMonitor is enabled and you want prometheus to automatically register
+      # target using serviceMonitor, add additionalLabels with prometheus release name
+      # e.g. If you have deployed kube-prometheus-stack with release name kube-prometheus
+      # then additionalLabels will be
+      # additionalLabels:
+      #   release: kube-prometheus
+      additionalLabels: {}
+      targetLabels: []
 
 global:
   graph_service_impl: neo4j
@@ -154,13 +176,29 @@ global:
         secretRef: mysql-secrets
         secretKey: mysql-root-password
 
+      ## Use below for usage of PostgreSQL instead of MySQL
+      # host: "prerequisites-postgresql:5432"
+      # hostForpostgresqlClient: "prerequisites-postgresql"
+      # port: "5432"
+      # url: "jdbc:postgresql://prerequisites-postgresql:5432/datahub"
+      # driver: "org.postgresql.Driver"
+      # username: "postgres"
+      # password:
+      #   secretRef: postgresql-secrets
+      #   secretKey: postgres-password
+
   datahub:
     gms:
       port: "8080"
       nodePort: "30001"
+
+    monitoring:
+      enablePrometheus: true
+
     mae_consumer:
       port: "9091"
       nodePort: "30002"
+
     appVersion: "1.0"
 
     encryptionKey:
@@ -171,7 +209,7 @@ global:
 
     managed_ingestion:
       enabled: true
-      defaultCliVersion: "0.8.43"
+      defaultCliVersion: "0.8.44"
 
     metadata_service_authentication:
       enabled: false
@@ -194,10 +232,11 @@ global:
 #      hostnames:
 #        - "broker"
 #        - "mysql"
+#        - "postgresql"
 #        - "elasticsearch"
 #        - "neo4j"
 
-##  Add below to enable SSL for kafka
+## Add below to enable SSL for kafka
 #  credentialsAndCertsSecrets:
 #    name: datahub-certs
 #    path: /mnt/datahub/certs

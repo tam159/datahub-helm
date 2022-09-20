@@ -6,6 +6,7 @@ metadata:
     {{- include "datahub-frontend.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
   selector:
     matchLabels:
       {{- include "datahub-frontend.selectorLabels" . | nindent 6 }}
@@ -58,6 +59,11 @@ spec:
             - name: http
               containerPort: 9002
               protocol: TCP
+          {{- if or .Values.global.datahub.monitoring.enablePrometheus .Values.global.datahub.monitoring.enableJMXPort }}
+            - name: jmx
+              containerPort: 4318
+              protocol: TCP
+          {{- end }}
           livenessProbe:
             httpGet:
               path: /admin
@@ -73,6 +79,10 @@ spec:
             periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
             failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
           env:
+            {{- if .Values.global.datahub.monitoring.enablePrometheus }}
+            - name: ENABLE_PROMETHEUS
+              value: "true"
+            {{- end }}
             - name: DATAHUB_GMS_HOST
               value: {{ printf "%s-%s" .Release.Name "datahub-gms" }}
             - name: DATAHUB_GMS_PORT
@@ -159,7 +169,14 @@ spec:
             - name: AUTH_OIDC_CLIENT_ID
               value: {{ .clientId }}
             - name: AUTH_OIDC_CLIENT_SECRET
+            {{- if .clientSecretRef }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .clientSecretRef.secretRef }}
+                  key: {{ .clientSecretRef.secretKey }}
+            {{- else }}
               value: {{ .clientSecret }}
+            {{- end }}
             - name: AUTH_OIDC_BASE_URL
               value: https://{{ (first $.Values.ingress.hosts).host }}
             {{- if eq .provider "google" }}
